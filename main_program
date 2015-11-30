@@ -85,7 +85,7 @@ class character(object):
 	def print_char(self):
 		char_printout = ('Name: ' + str(self.name) + '\n' 
 						'Level: ' + str(self.level) + '\n' 
-						'Race: ' + str(self.race.print_race) + '\n' 
+						'Race: ' + str(self.race.print_race()) + '\n' 
 						'Health: ' + str(self.health) + '\n' 
 						'Mana: ' + str(self.mana) + '\n' 
 						'Available stat points: ' + str(self.available_stat_points) + '\n' 
