@@ -106,7 +106,7 @@ window.title('RPG character builder')
 width = 150     # controls how wide the window is
 height = 200    # controls how tall the window is
 window.geometry(str(width * 2) + "x" + str(height * 3)) # sizes the window
-window.wm_iconbitmap('guildEmblem.ico')
+#window.wm_iconbitmap('guildEmblem.ico')
 
 
 # *** Status bar ***
