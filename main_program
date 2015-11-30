@@ -318,7 +318,7 @@ print_char_button.grid(row=3)
 messagebox.showinfo('Character builder', 'Use this program to build your character')
 answer = messagebox.askquestion('Begin building?', 'Are you ready to get started?')
 if answer == 'yes':
-    print("Let's begin")
+    print "Let's begin"
 else:
 	window.destroy()
 
