@@ -3,7 +3,8 @@ from tkinter import messagebox
 
 
 class race(object):
-	
+	pass
+	'''
 	def __init__(self):
 		self.base_strength = 1
 		self.base_dexterity = 1
@@ -17,6 +18,7 @@ class race(object):
 			'Con: ' + str(self.base_constitution) + " "
 			'Int: ' + str(self.base_intelligence) + " "
 			'Wis: ' + str(self.base_wisdom))
+	'''
 
 
 class human(race):
@@ -44,7 +46,7 @@ class elf(race):
 	def print_race(self):
 		return 'Elf'
 
-
+		
 class dwarf(race):
 
 	def __init__(self):
@@ -69,18 +71,30 @@ class orc(race):
 
 	def print_race(self):
 		return 'Orc'
-	
-	
+		
+		
 class character(object):
 	
 	def __init__(self):
 		self.name = 'Nemo'
 		self.level = 1
 		self.race = human()
-		self.health = None
-		self.mana = None
-		self.available_stat_points = None
-		self.spend_stat_points = None
+		self.strength = self.race.base_strength
+		self.dexterity = self.race.base_dexterity
+		self.constitution = self.race.base_constitution
+		self.intelligence = self.race.base_intelligence
+		self.wisdom = self.race.base_wisdom
+		self.health = 50
+		self.mana = 50
+		self.available_stat_points = 0
+		self.spent_stat_points = 0
+		
+	def print_stats(self):
+		return ('Str: ' + str(self.strength) + " "
+			'Dex: ' + str(self.dexterity) + " "
+			'Con: ' + str(self.constitution) + " "
+			'Int: ' + str(self.intelligence) + " "
+			'Wis: ' + str(self.wisdom))
 	
 	def print_char(self):
 		char_printout = ('Name: ' + str(self.name) + '\n' 
@@ -89,11 +103,15 @@ class character(object):
 						'Health: ' + str(self.health) + '\n' 
 						'Mana: ' + str(self.mana) + '\n' 
 						'Available stat points: ' + str(self.available_stat_points) + '\n' 
-						'Stats: ' + str(self.race.print_race_base_stats()))
+						'Stats: ' + str(self.print_stats()))
 		messagebox.showinfo('Your character', char_printout)
-	
-	def calc_stat_points(self):
-		return self.level*5 - self.spent_stat_points
+		
+	def update_stats(self):
+		self.health = 50 + (self.constitution * self.level)
+		self.mana = 50 + (self.intelligence +
+						   self.wisdom * (self.level-1) // 2)
+		# Health and mana are not updating properly with stat changes, need to fix!
+		self.available_stat_points = ((self.level - 1) * 5) - self.spent_stat_points
 
 		
 my_first_character = character()
@@ -105,8 +123,8 @@ window = tkinter.Tk()
 window.title('RPG character builder')
 width = 150     # controls how wide the window is
 height = 200    # controls how tall the window is
-window.geometry(str(width * 2) + "x" + str(height * 3)) # sizes the window
-#window.wm_iconbitmap('guildEmblem.ico')
+window.geometry(str(int(width * 1.75)) + "x" + str(int(height * 1.65))) # sizes the window
+# window.wm_iconbitmap('guildEmblem.ico')
 
 
 # *** Status bar ***
@@ -117,16 +135,16 @@ status.pack(side=tkinter.BOTTOM, fill='x')
 
 
 #*** Frames ***
-top_frame = tkinter.Frame(window, background="bisque")
+top_frame = tkinter.Frame(window)
 top_frame.pack(side=tkinter.TOP, fill='both', expand=True)
 
-top_left_frame = tkinter.Frame(top_frame, bg="blue")
+top_left_frame = tkinter.Frame(top_frame)
 top_left_frame.pack(side=tkinter.LEFT, fill='both')
 
-top_right_frame = tkinter.Frame(top_frame, bg="red")
+top_right_frame = tkinter.Frame(top_frame)
 top_right_frame.pack(side=tkinter.RIGHT, fill='both')
 
-bottom_frame = tkinter.Frame(window, bg="green")
+bottom_frame = tkinter.Frame(window)
 bottom_frame.pack(side=tkinter.BOTTOM, fill='both', expand=True)
 
 
@@ -165,7 +183,7 @@ confirm_name_button.bind("<Button-1>", confirm_char_name) # when the button is l
 
 name_lbl.pack()
 name_entry.pack()
-confirm_name_button.pack()
+confirm_name_button.pack(pady=2)
 
 
 # *** Race option menu ***
@@ -179,15 +197,32 @@ race_drop_down = tkinter.OptionMenu(top_left_frame, race_var, *races)
 race_drop_down.pack()
 
 def confirm_race():
-	temp_race_var = race_var.get()
-	if temp_race_var == 'Human':
-		my_first_character.race = human()
-	elif temp_race_var == 'Elf':
-		my_first_character.race = elf()
-	elif temp_race_var == 'Dwarf':
-		my_first_character.race = dwarf()
+	change_race = messagebox.askquestion("Change race", 
+										"Changing race will reset stat points. Proceed?")
+	if change_race == 'yes':
+		temp_race_var = race_var.get()
+		if temp_race_var == 'Human':
+			my_first_character.race = human()
+		elif temp_race_var == 'Elf':
+			my_first_character.race = elf()
+		elif temp_race_var == 'Dwarf':
+			my_first_character.race = dwarf()
+		else:
+			my_first_character.race = orc()
+		my_first_character.strength = my_first_character.race.base_strength
+		my_first_character.dexterity = my_first_character.race.base_dexterity
+		my_first_character.constitution = my_first_character.race.base_constitution
+		my_first_character.intelligence = my_first_character.race.base_intelligence
+		my_first_character.wisdom = my_first_character.race.base_wisdom
+		my_first_character.spent_stat_points = 0
+		update_char()
+		str_incrementor.stat_display.config(text=str(my_first_character.strength))
+		dex_incrementor.stat_display.config(text=str(my_first_character.dexterity))
+		con_incrementor.stat_display.config(text=str(my_first_character.constitution))
+		int_incrementor.stat_display.config(text=str(my_first_character.intelligence))
+		wis_incrementor.stat_display.config(text=str(my_first_character.wisdom))
 	else:
-		my_first_character.race = orc()
+		pass
 
 confirm_race_button = tkinter.Button(top_left_frame, text="Confirm race", 
 									 command=confirm_race)
@@ -200,6 +235,7 @@ def select_level():
 	selected_level = "Level " + str(level.get())
 	level_label.config(text = selected_level)
 	my_first_character.level = level.get()
+	update_char()
 
 level = tkinter.IntVar()
 level_scale = tkinter.Scale(top_left_frame, variable=level, sliderlength=10, 
@@ -216,109 +252,119 @@ level_label.pack()
 
 #*** Stat incrementors ***
 
-def confirm_stats():
-	#TODO: Need to modify stats and availabled/used stat point variables
-	if available_stat_points < 0:
-		messagebox.showinfo("Error", "Insufficient available stat points.")
+class stat_incrementor(object): # Sets up the basic bones for the various stat incrementors
+	
+	def __init__(self, frame, stat, row):
+		self.frame = frame
+		self.stat = stat
+		self.stat_min = None
+		self.row = row
+		pady_num = 5
+		
+		# The following if/else statements depend entirely on the row input
+		# It isn't ideal, but it got the job done.
+		if self.row == 0:
+			self.stat_name_text = 'Strength'
+			self.stat_min = my_first_character.race.base_strength
+		elif self.row == 1:
+			self.stat_name_text = 'Dexterity'
+			self.stat_min = my_first_character.race.base_dexterity
+		elif self.row == 2:
+			self.stat_name_text = 'Constitution'
+			self.stat_min = my_first_character.race.base_constitution
+		elif self.row == 3:
+			self.stat_name_text = 'Intelligence'
+			self.stat_min = my_first_character.race.base_intelligence
+		else:
+			self.stat_name_text = 'Wisdom'
+			self.stat_min = my_first_character.race.base_wisdom
+		
+		self.stat_name = tkinter.Label(self.frame, text=self.stat_name_text)
+		self.stat_name.grid(row=self.row, column=0, sticky=tkinter.E, pady=pady_num)
+		self.stat_minus_btn = tkinter.Button(self.frame, text='-', command=self.minus_stat)
+		self.stat_minus_btn.grid(row=self.row, column=1, pady=pady_num)
+		self.stat_display = tkinter.Label(self.frame, text=str(self.stat))
+		self.stat_display.grid(row=self.row, column=2, pady=pady_num)
+		self.stat_plus_btn = tkinter.Button(self.frame, text='+', command=self.plus_stat)
+		self.stat_plus_btn.grid(row=self.row, column=3, pady=pady_num)
+		
+	def minus_stat(self): # Each call reduces the stat by 1 and updates the char info
+		if self.stat == self.stat_min:
+			messagebox.showinfo("Error", "Stat already at minimum.")
+		elif my_first_character.spent_stat_points == 0:
+			messagebox.showinfo("Error", "No spent stat points to return.")
+		else:
+			self.stat -= 1
+			my_first_character.spent_stat_points -= 1
+			my_first_character.available_stat_points += 1
+			self.stat_display.config(text = str(self.stat))
+			update_char()
+		
+	def plus_stat(self): # Each call increases the stat by 1 and updates the char info
+		if my_first_character.available_stat_points < 1:
+			messagebox.showinfo("Error", "Insufficient stat points.")
+		else:
+			self.stat += 1
+			my_first_character.spent_stat_points += 1
+			my_first_character.available_stat_points -= 1
+			self.stat_display.config(text = str(self.stat))
+			update_char()
+		
 
-
-base_stat = 1
-max_stat = 250
-pady_num = 1
-
-str_stat = tkinter.IntVar()
-str_stat.set(50)
-str_stat_lbl = tkinter.Label(top_right_frame, text="Strength")
-str_stat_lbl.grid(row=0, column=0, sticky=tkinter.E, pady=pady_num)
-str_incrementor = tkinter.Spinbox(top_right_frame, width=4, 
-								  from_=base_stat, to=max_stat, 
-								  textvariable=str_stat, state='readonly')
-str_incrementor.grid(row=0, column=1, pady=pady_num)
-strength = str_incrementor.get()
-
-dex_stat = tkinter.IntVar()
-dex_stat_lbl = tkinter.Label(top_right_frame, text="Dexterity")
-dex_stat_lbl.grid(row=1, column=0, sticky=tkinter.E, pady=pady_num)
-dex_incrementor = tkinter.Spinbox(top_right_frame, width=4, 
-								  from_=base_stat, to=max_stat, 
-								  textvariable=dex_stat, state='readonly')
-dex_incrementor.grid(row=1, column=1, pady=pady_num)
-dexterity = dex_incrementor.get()
-
-con_stat = tkinter.IntVar()
-con_stat_lbl = tkinter.Label(top_right_frame, text="Constitution")
-con_stat_lbl.grid(row=2, column=0, sticky=tkinter.E, pady=pady_num)
-con_incrementor = tkinter.Spinbox(top_right_frame, width=4, 
-								  from_=base_stat, to=max_stat, 
-								  textvariable=con_stat, state='readonly')
-con_incrementor.grid(row=2, column=1, pady=pady_num)
-constitution = con_incrementor.get()
-
-int_stat = tkinter.IntVar()
-int_stat_lbl = tkinter.Label(top_right_frame, text="Intelligence")
-int_stat_lbl.grid(row=3, column=0, sticky=tkinter.E, pady=pady_num)
-int_incrementor = tkinter.Spinbox(top_right_frame, width=4, 
-								  from_=base_stat, to=max_stat, 
-								  textvariable=int_stat, state='readonly')
-int_incrementor.grid(row=3, column=1, pady=pady_num)
-intelligence = int_incrementor.get()
-
-wis_stat = tkinter.IntVar()
-wis_stat_lbl = tkinter.Label(top_right_frame, text="Wisdom")
-wis_stat_lbl.grid(row=4, column=0, sticky=tkinter.E, pady=pady_num)
-wis_incrementor = tkinter.Spinbox(top_right_frame, width=4, 
-								  from_=base_stat, to=max_stat, 
-								  textvariable=wis_stat, state='readonly')
-wis_incrementor.grid(row=4, column=1, pady=pady_num)
-wisdom = wis_incrementor.get()
-
-confirm_stats_button = tkinter.Button(top_right_frame, 
-									  text='Confirm stats', command=confirm_stats)
-confirm_stats_button.grid(row=5, columnspan=10, pady=pady_num)
+str_incrementor = stat_incrementor(top_right_frame, my_first_character.strength, 0)
+dex_incrementor = stat_incrementor(top_right_frame, my_first_character.dexterity, 1)
+con_incrementor = stat_incrementor(top_right_frame, my_first_character.constitution, 2)
+int_incrementor = stat_incrementor(top_right_frame, my_first_character.intelligence, 3)
+wis_incrementor = stat_incrementor(top_right_frame, my_first_character.wisdom, 4)
 
 
 #*** Health and Mana totals ***
 
-health = 50 #+ ((constitution * int(level.get())-1) / 2)
-mana = 50 #+ ((intelligence + wisdom * int(level.get())-1) / 2)
-stat_points = 10
-
-health_label = tkinter.Label(bottom_frame, text="Health", relief=tkinter.SUNKEN)
+health_label = tkinter.Label(bottom_frame, text="Health")
 health_label.grid(row=0, column=0, sticky=tkinter.E)
+health_total = tkinter.Label(bottom_frame, text=str(my_first_character.health),
+							relief=tkinter.SUNKEN)
+health_total.grid(row=0, column=1, sticky=tkinter.W)
 
-health_total = tkinter.Listbox(bottom_frame, height=1, width=10)
-health_total.insert(1, str(health))
-health_total.grid(row=0, column=1)
-
-mana_label = tkinter.Label(bottom_frame, text="Mana", relief=tkinter.SUNKEN)
+mana_label = tkinter.Label(bottom_frame, text="Mana")
 mana_label.grid(row=1, column=0, sticky=tkinter.E)
-
-mana_total = tkinter.Listbox(bottom_frame, height=1, width=10)
-mana_total.insert(1, str(mana))
-mana_total.grid(row=1, column=1)
+mana_total = tkinter.Label(bottom_frame, text=str(my_first_character.mana),
+						relief=tkinter.SUNKEN)
+mana_total.grid(row=1, column=1, sticky=tkinter.W)
 
 
 #*** Stat points available ***
 
-stat_points_label = tkinter.Label(bottom_frame, text="Avaiable stat points", relief=tkinter.SUNKEN)
+stat_points_label = tkinter.Label(bottom_frame, text="Avaiable stat points")
 stat_points_label.grid(row=2, column=0, sticky=tkinter.E)
+stat_points_count = tkinter.Label(bottom_frame, 
+								text=str(my_first_character.available_stat_points),
+								relief=tkinter.SUNKEN)
+stat_points_count.grid(row=2, column=1, sticky=tkinter.W)
 
-stat_points_count = tkinter.Listbox(bottom_frame, height=1, width=10)
-stat_points_count.insert(1, str(stat_points))
-stat_points_count.grid(row=2, column=1)
 
+#*** Update and Print char ***
 
-#*** Print char ***
+pady_num = 5
+def update_char():
+	my_first_character.update_stats()
+	health_total.config(text = str(my_first_character.health))
+	mana_total.config(text = str(my_first_character.mana))
+	stat_points_count.config(text = str(my_first_character.available_stat_points))
+
+update_char_button = tkinter.Button(bottom_frame, text='Update stats',
+									command=update_char)
+update_char_button.grid(row=3, column=0, pady=pady_num)
 print_char_button = tkinter.Button(bottom_frame, text='Print Character',
 								   command=my_first_character.print_char)
-print_char_button.grid(row=3)
+print_char_button.grid(row=3, column=1, pady=pady_num)
 
 
 # *** Messagebox ***
 messagebox.showinfo('Character builder', 'Use this program to build your character')
 answer = messagebox.askquestion('Begin building?', 'Are you ready to get started?')
 if answer == 'yes':
-    print "Let's begin"
+    print("Let's begin")
 else:
 	window.destroy()
 
