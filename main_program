@@ -107,10 +107,14 @@ class character(object):
 		messagebox.showinfo('Your character', char_printout)
 		
 	def update_stats(self):
-		self.health = 50 + (self.constitution * self.level)
-		self.mana = 50 + (self.intelligence +
-						   self.wisdom * (self.level-1) // 2)
-		# Health and mana are not updating properly with stat changes, need to fix!
+		self.health = 50 + (self.constitution * self.race.base_constitution * 5) + \
+					((self.level - 1) * 20)
+		if self.intelligence > self.wisdom:
+			self.mana = 50 + ((self.wisdom + self.intelligence * 
+						self.race.base_intelligence + ((self.level-1) * 20)) // 2)
+		else:
+			self.mana = 50 + ((self.intelligence + self.wisdom * 
+						self.race.base_wisdom + ((self.level-1) * 20)) // 2)
 		self.available_stat_points = ((self.level - 1) * 5) - self.spent_stat_points
 
 		
@@ -232,10 +236,14 @@ confirm_race_button.pack()
 # *** Level selector ***
 
 def select_level():
-	selected_level = "Level " + str(level.get())
-	level_label.config(text = selected_level)
-	my_first_character.level = level.get()
-	update_char()
+	if level.get() < my_first_character.level \
+	and my_first_character.available_stat_points < 5:
+		messagebox.showinfo('Error', 'Refund stat points before decreasing level')
+	else:
+		selected_level = "Level " + str(level.get())
+		level_label.config(text = selected_level)
+		my_first_character.level = level.get()
+		update_char()
 
 level = tkinter.IntVar()
 level_scale = tkinter.Scale(top_left_frame, variable=level, sliderlength=10, 
@@ -257,65 +265,126 @@ class stat_incrementor(object): # Sets up the basic bones for the various stat i
 	def __init__(self, frame, stat, row):
 		self.frame = frame
 		self.stat = stat
-		self.stat_min = None
 		self.row = row
 		pady_num = 5
 		
-		# The following if/else statements depend entirely on the row input
-		# It isn't ideal, but it got the job done.
-		if self.row == 0:
-			self.stat_name_text = 'Strength'
-			self.stat_min = my_first_character.race.base_strength
-		elif self.row == 1:
-			self.stat_name_text = 'Dexterity'
-			self.stat_min = my_first_character.race.base_dexterity
-		elif self.row == 2:
-			self.stat_name_text = 'Constitution'
-			self.stat_min = my_first_character.race.base_constitution
-		elif self.row == 3:
-			self.stat_name_text = 'Intelligence'
-			self.stat_min = my_first_character.race.base_intelligence
-		else:
-			self.stat_name_text = 'Wisdom'
-			self.stat_min = my_first_character.race.base_wisdom
-		
-		self.stat_name = tkinter.Label(self.frame, text=self.stat_name_text)
+		self.stat_name = tkinter.Label(self.frame, text=self.stat)
 		self.stat_name.grid(row=self.row, column=0, sticky=tkinter.E, pady=pady_num)
 		self.stat_minus_btn = tkinter.Button(self.frame, text='-', command=self.minus_stat)
 		self.stat_minus_btn.grid(row=self.row, column=1, pady=pady_num)
-		self.stat_display = tkinter.Label(self.frame, text=str(self.stat))
+		if self.stat == 'Strength':
+			self.stat_display = tkinter.Label(self.frame, text=str(my_first_character.strength))
+		elif self.stat == 'Dexterity':
+			self.stat_display = tkinter.Label(self.frame, text=str(my_first_character.dexterity))
+		elif self.stat == 'Constitution':
+			self.stat_display = tkinter.Label(self.frame, text=str(my_first_character.constitution))
+		elif self.stat == 'Intelligence':
+			self.stat_display = tkinter.Label(self.frame, text=str(my_first_character.intelligence))
+		else:
+			self.stat_display = tkinter.Label(self.frame, text=str(my_first_character.wisdom))
 		self.stat_display.grid(row=self.row, column=2, pady=pady_num)
 		self.stat_plus_btn = tkinter.Button(self.frame, text='+', command=self.plus_stat)
 		self.stat_plus_btn.grid(row=self.row, column=3, pady=pady_num)
 		
 	def minus_stat(self): # Each call reduces the stat by 1 and updates the char info
-		if self.stat == self.stat_min:
-			messagebox.showinfo("Error", "Stat already at minimum.")
-		elif my_first_character.spent_stat_points == 0:
+		change_stat = True
+		if my_first_character.spent_stat_points == 0:
 			messagebox.showinfo("Error", "No spent stat points to return.")
+			change_stat = False
+		elif self.stat == 'Strength':
+			if my_first_character.strength == my_first_character.race.base_strength:
+				messagebox.showinfo("Error", "Stat already at minimum.")
+				change_stat = False
+			else:
+				my_first_character.strength -= 1
+				self.stat_display.config(text = str(my_first_character.strength))
+		elif self.stat == 'Dexterity':
+			if my_first_character.dexterity == my_first_character.race.base_dexterity:
+				messagebox.showinfo("Error", "Stat already at minimum.")
+				change_stat = False
+			else:
+				my_first_character.dexterity -= 1
+				self.stat_display.config(text = str(my_first_character.dexterity))
+		elif self.stat == 'Constitution':
+			if my_first_character.constitution == my_first_character.race.base_constitution:
+				messagebox.showinfo("Error", "Stat already at minimum.")
+				change_stat = False
+			else:
+				my_first_character.constitution -= 1
+				self.stat_display.config(text = str(my_first_character.constitution))
+		elif self.stat == 'Intelligence':
+			if my_first_character.intelligence == my_first_character.race.base_intelligence:
+				messagebox.showinfo("Error", "Stat already at minimum.")
+				change_stat = False
+			else:
+				my_first_character.intelligence -= 1
+				self.stat_display.config(text = str(my_first_character.intelligence))
 		else:
-			self.stat -= 1
+			if my_first_character.wisdom == my_first_character.race.base_wisdom:
+				messagebox.showinfo("Error", "Stat already at minimum.")
+				change_stat = False
+			else:
+				my_first_character.wisdom -= 1
+				self.stat_display.config(text = str(my_first_character.wisdom))
+		
+		if change_stat:
 			my_first_character.spent_stat_points -= 1
 			my_first_character.available_stat_points += 1
-			self.stat_display.config(text = str(self.stat))
 			update_char()
 		
 	def plus_stat(self): # Each call increases the stat by 1 and updates the char info
+		max_stat = 255
+		change_stat = True
 		if my_first_character.available_stat_points < 1:
 			messagebox.showinfo("Error", "Insufficient stat points.")
+			change_stat = False
+		elif self.stat == 'Strength':
+			if my_first_character.strength == max_stat:
+				messagebox.showinfo("Error", "Stat already at maximum.")
+				change_stat = False
+			else:
+				my_first_character.strength += 1
+				self.stat_display.config(text = str(my_first_character.strength))
+		elif self.stat == 'Dexterity':
+			if my_first_character.dexterity == max_stat:
+				messagebox.showinfo("Error", "Stat already at maximum.")
+				change_stat = False
+			else:
+				my_first_character.dexterity += 1
+				self.stat_display.config(text = str(my_first_character.dexterity))
+		elif self.stat == 'Constitution':
+			if my_first_character.constitution == max_stat:
+				messagebox.showinfo("Error", "Stat already at maximum.")
+				change_stat = False
+			else:
+				my_first_character.constitution += 1
+				self.stat_display.config(text = str(my_first_character.constitution))
+		elif self.stat == 'Intelligence':
+			if my_first_character.intelligence == max_stat:
+				messagebox.showinfo("Error", "Stat already at maximum.")
+				change_stat = False
+			else:
+				my_first_character.intelligence += 1
+				self.stat_display.config(text = str(my_first_character.intelligence))
 		else:
-			self.stat += 1
+			if my_first_character.wisdom == max_stat:
+				messagebox.showinfo("Error", "Stat already at maximum.")
+				change_stat = False
+			else:
+				my_first_character.wisdom += 1
+				self.stat_display.config(text = str(my_first_character.wisdom))
+		
+		if change_stat:
 			my_first_character.spent_stat_points += 1
 			my_first_character.available_stat_points -= 1
-			self.stat_display.config(text = str(self.stat))
 			update_char()
 		
 
-str_incrementor = stat_incrementor(top_right_frame, my_first_character.strength, 0)
-dex_incrementor = stat_incrementor(top_right_frame, my_first_character.dexterity, 1)
-con_incrementor = stat_incrementor(top_right_frame, my_first_character.constitution, 2)
-int_incrementor = stat_incrementor(top_right_frame, my_first_character.intelligence, 3)
-wis_incrementor = stat_incrementor(top_right_frame, my_first_character.wisdom, 4)
+str_incrementor = stat_incrementor(top_right_frame, 'Strength', 0)
+dex_incrementor = stat_incrementor(top_right_frame, 'Dexterity', 1)
+con_incrementor = stat_incrementor(top_right_frame, 'Constitution', 2)
+int_incrementor = stat_incrementor(top_right_frame, 'Intelligence', 3)
+wis_incrementor = stat_incrementor(top_right_frame, 'Wisdom', 4)
 
 
 #*** Health and Mana totals ***
